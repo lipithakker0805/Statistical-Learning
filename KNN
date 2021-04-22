@@ -1,0 +1,43 @@
+#Loading data
+library(readr)
+X1_test_data_1_ <- read_csv("Downloads/1-test_data(1).csv") 
+X1_training_data_1_ <- read_csv("Downloads/1-training_data(1).csv")
+#dividing the train and test data into predictor and respose. Here x.1 and x,2 is the predictor and y is the response.
+# dividing train data attach(X1_training_data_1_) train.x <- cbind(x.1,x.2) train.y <- cbind(y)
+#dividing test data attach(X1_test_data_1_) test.x <- cbind(x.1,x.2) test.y <- cbind(y)
+#plotting the train data were x- axis is predictors and y- axis is response. plot(train.x, xlab = "x.1", ylab = "x.2", col = ifelse(train.y == "yes", "blue", "yellow"))
+# beginning the classification using KNN technique. library(class)
+set.seed(1)
+mod.train <- knn(train.x, train.x, train.y, k = 1) table(mod.train, train.y)
+mean(mod.train != train.y)
+set.seed(1)
+mod.test <- knn(train.x, test.x, train.y, k = 1) table(mod.test, test.y)
+mean(mod.test != test.y)
+ks <- c(seq(1, 6, by = 5), seq(11, 200, by = 5))
+nks <- length(ks)
+err.rate.train <- numeric(length=nks)
+err.rate.test <- numeric(length=nks)
+names(err.rate.train) <- names(err.rate.test) <- ks
+
+for (i in seq(along = ks)) { set.seed(1)
+mod.train <- knn(train.x, train.x, train.y, k = ks[i]) set.seed(1)
+mod.test <- knn(train.x, test.x, train.y, k = ks[i]) err.rate.train[i] <- mean(mod.train != train.y) err.rate.test[i] <- mean(mod.test != test.y)
+}
+
+plot(ks, err.rate.train, xlab = "Number of nearest neighbors", ylab = "Error rate", type = "b", ylim = range(c(err.rate.train, err.rate.test)), col = "blue", pch = 20)
+lines(ks, err.rate.test, type="b", col="purple", pch = 20)
+legend("bottomright", lty = 1, col = c("blue", "purple"), legend = c("training", "test"))
+
+result <- data.frame(ks, err.rate.train, err.rate.test) result[err.rate.test == min(result$err.rate.test), ]
+
+n.grid <- 50
+x1.grid <- seq(f = min(train.x[, 1]), t = max(train.x[, 1]), l = n.grid) x2.grid <- seq(f = min(train.x[, 2]), t = max(train.x[, 2]), l = n.grid) grid <- expand.grid(x1.grid, x2.grid)
+
+k.opt <- 131
+set.seed(1)
+mod.opt <- knn(train.x, grid, train.y, k = k.opt, prob = T)
+prob <- attr(mod.opt, "prob") # prob is voting fraction for winning class
+prob <- ifelse(mod.opt == "yes", prob, 1 - prob) # now it is voting fraction for Direction == "Up" prob <- matrix(prob, n.grid, n.grid)
+
+plot(train.x, col = ifelse(train.y == "yes", "green", "orange"))
+contour(x1.grid, x2.grid, prob, levels = 0.5, labels = "", xlab = "", ylab = "", main = "", add = T)
